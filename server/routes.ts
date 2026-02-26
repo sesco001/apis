@@ -73,8 +73,56 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       res.status(500).json({ message: "Failed to scrape endpoints" });
     }
   });
+
+  app.use('/makamesco', async (req, res) => {
+    try {
+      const targetPath = req.path;
+      const targetUrl = new URL(`https://api.bk9.dev${targetPath}`);
+      
+      Object.entries(req.query).forEach(([key, value]) => {
+        if (typeof value === 'string') {
+          targetUrl.searchParams.append(key, value);
+        }
+      });
+
+      const fetchOptions: RequestInit = {
+        method: req.method,
+        headers: {
+          'User-Agent': 'Makamesco-API/1.0',
+        },
+      };
+
+      if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
+        fetchOptions.body = JSON.stringify(req.body);
+        (fetchOptions.headers as Record<string, string>)['Content-Type'] = 'application/json';
+      }
+
+      const response = await fetch(targetUrl.toString(), fetchOptions);
+
+      const contentType = response.headers.get('content-type') || '';
+
+      res.set('X-Powered-By', 'Makamesco API');
+      res.set('X-Proxied-From', 'api.bk9.dev');
+      res.set('Access-Control-Allow-Origin', '*');
+
+      if (contentType.includes('application/json')) {
+        const data = await response.json();
+        res.status(response.status).json(data);
+      } else {
+        const buffer = Buffer.from(await response.arrayBuffer());
+        res.set('Content-Type', contentType);
+        res.status(response.status).send(buffer);
+      }
+    } catch (err) {
+      console.error('Proxy error:', err);
+      res.status(502).json({
+        error: true,
+        message: 'Failed to proxy request to upstream API',
+        service: 'makamesco',
+      });
+    }
+  });
   
-  // Seed initially if empty
   storage.getEndpointCount().then(async count => {
     if (count === 0) {
       console.log("Database empty, starting initial scrape...");
