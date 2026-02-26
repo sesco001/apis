@@ -51,6 +51,33 @@ async function scrapeEndpoints() {
   return count;
 }
 
+function rebrandValue(val: string): string {
+  return val
+    .replace(/@BK9dev/gi, '@Makamesco')
+    .replace(/BK9dev/gi, 'Makamesco')
+    .replace(/BK9/gi, 'Makamesco')
+    .replace(/api\.bk9\.dev/gi, 'Makamesco API');
+}
+
+function rebrandResponse(data: any): any {
+  if (data === null || data === undefined) return data;
+  if (typeof data === 'string') {
+    return rebrandValue(data);
+  }
+  if (Array.isArray(data)) {
+    return data.map(rebrandResponse);
+  }
+  if (typeof data === 'object') {
+    const result: Record<string, any> = {};
+    for (const [key, value] of Object.entries(data)) {
+      const newKey = rebrandValue(key);
+      result[newKey] = rebrandResponse(value);
+    }
+    return result;
+  }
+  return data;
+}
+
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   app.get(api.endpoints.list.path, async (req, res) => {
     try {
@@ -107,7 +134,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       if (contentType.includes('application/json')) {
         const data = await response.json();
-        res.status(response.status).json(data);
+        const rebranded = rebrandResponse(data);
+        res.status(response.status).json(rebranded);
       } else {
         const buffer = Buffer.from(await response.arrayBuffer());
         res.set('Content-Type', contentType);
