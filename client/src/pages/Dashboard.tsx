@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Search, RefreshCcw, Database, AlertCircle, Zap, BookOpen, Bot, Download, Globe, Moon, Eye, Info, Wrench, Repeat, Flame, Link as LinkIcon } from "lucide-react";
 import { useEndpoints, useScrapeEndpoints } from "@/hooks/use-endpoints";
 import { EndpointCard } from "@/components/EndpointCard";
@@ -30,26 +30,24 @@ function CategoryGroup({ category, endpoints, startIndex }: { category: string; 
   const Icon = info.icon;
 
   return (
-    <section className="mb-12" data-testid={`section-${category}`}>
-      <div className="flex items-center gap-3 mb-6">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${info.color} text-white shadow-sm`}>
-          <Icon className="h-5 w-5" />
+    <section className="mb-8 sm:mb-12" data-testid={`section-${category}`}>
+      <div className="flex items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
+        <div className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br ${info.color} text-white shadow-sm`}>
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
         <div>
-          <h3 className="text-xl font-semibold text-foreground" data-testid={`text-category-title-${category}`}>
+          <h3 className="text-lg sm:text-xl font-semibold text-foreground" data-testid={`text-category-title-${category}`}>
             {info.label}
           </h3>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[11px] sm:text-xs text-muted-foreground">
             {endpoints.length} endpoint{endpoints.length !== 1 ? "s" : ""}
           </p>
         </div>
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <AnimatePresence mode="popLayout">
-          {endpoints.map((endpoint, index) => (
-            <EndpointCard key={endpoint.id} endpoint={endpoint} index={startIndex + index} />
-          ))}
-        </AnimatePresence>
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {endpoints.map((endpoint, index) => (
+          <EndpointCard key={endpoint.id} endpoint={endpoint} index={startIndex + index} />
+        ))}
       </div>
     </section>
   );
@@ -124,12 +122,12 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[#FAFAFA] dark:bg-background pb-24 selection:bg-primary selection:text-primary-foreground">
       <header className="sticky top-0 z-50 glass-panel border-b border-border/40">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-sm">
-                <Zap className="h-5 w-5" />
+          <div className="flex h-14 sm:h-16 items-center justify-between gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-sm shrink-0">
+                <Zap className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <h1 className="text-xl font-semibold tracking-tight text-foreground" data-testid="text-brand-name">
+              <h1 className="text-base sm:text-xl font-semibold tracking-tight text-foreground truncate" data-testid="text-brand-name">
                 Makamesco API
               </h1>
             </div>
@@ -158,19 +156,19 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12">
-        <div className="mb-10 space-y-4">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 sm:pt-12">
+        <div className="mb-6 sm:mb-10 space-y-3 sm:space-y-4">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-foreground" data-testid="text-hero-title">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground" data-testid="text-hero-title">
               Your API Gateway
             </h2>
-            <p className="mt-2 text-muted-foreground max-w-2xl">
-              Access all endpoints through <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">/makamesco/</code> prefix. Full proxy with JSON and binary support.
+            <p className="mt-1.5 sm:mt-2 text-sm sm:text-base text-muted-foreground max-w-2xl">
+              Access all endpoints through <code className="rounded bg-muted px-1 sm:px-1.5 py-0.5 font-mono text-[11px] sm:text-xs text-foreground">/makamesco/</code> prefix. Full proxy with JSON and binary support.
             </p>
           </div>
         </div>
 
-        <div className="mb-10 space-y-6">
+        <div className="mb-6 sm:mb-10 space-y-4 sm:space-y-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative max-w-md flex-1">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">

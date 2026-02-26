@@ -4,7 +4,7 @@ A full-stack API gateway platform that scrapes endpoints from `api.bk9.dev` and 
 
 ## Architecture
 
-- **Frontend**: React + Vite + TailwindCSS + Framer Motion
+- **Frontend**: React + Vite + TailwindCSS + Framer Motion (used sparingly for specific animations)
 - **Backend**: Express.js with proxy middleware
 - **Database**: PostgreSQL (Drizzle ORM)
 - **Scraping**: Cheerio for HTML parsing
