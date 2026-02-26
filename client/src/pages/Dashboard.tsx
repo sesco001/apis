@@ -1,11 +1,59 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, RefreshCcw, Database, AlertCircle, Zap, BookOpen } from "lucide-react";
+import { Search, RefreshCcw, Database, AlertCircle, Zap, BookOpen, Bot, Download, Globe, Moon, Eye, Info, Wrench, Repeat, Flame, Link as LinkIcon } from "lucide-react";
 import { useEndpoints, useScrapeEndpoints } from "@/hooks/use-endpoints";
 import { EndpointCard } from "@/components/EndpointCard";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import type { Endpoint } from "@shared/schema";
+
+const categoryMeta: Record<string, { label: string; icon: typeof Bot; color: string }> = {
+  ai: { label: "AI", icon: Bot, color: "from-purple-500 to-violet-600" },
+  download: { label: "Downloaders", icon: Download, color: "from-blue-500 to-cyan-600" },
+  search: { label: "Search", icon: Globe, color: "from-emerald-500 to-teal-600" },
+  islam: { label: "Islamic", icon: Moon, color: "from-amber-500 to-yellow-600" },
+  stalk: { label: "Stalker", icon: Eye, color: "from-pink-500 to-rose-600" },
+  details: { label: "Details", icon: Info, color: "from-sky-500 to-blue-600" },
+  tools: { label: "Tools", icon: Wrench, color: "from-orange-500 to-red-500" },
+  converter: { label: "Converters", icon: Repeat, color: "from-indigo-500 to-purple-600" },
+  arab: { label: "Arab", icon: Flame, color: "from-red-500 to-orange-600" },
+  shortner: { label: "Shortener", icon: LinkIcon, color: "from-teal-500 to-green-600" },
+};
+
+function getCategoryInfo(cat: string) {
+  return categoryMeta[cat] || { label: cat, icon: Globe, color: "from-gray-500 to-gray-600" };
+}
+
+function CategoryGroup({ category, endpoints, startIndex }: { category: string; endpoints: Endpoint[]; startIndex: number }) {
+  const info = getCategoryInfo(category);
+  const Icon = info.icon;
+
+  return (
+    <section className="mb-12" data-testid={`section-${category}`}>
+      <div className="flex items-center gap-3 mb-6">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${info.color} text-white shadow-sm`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div>
+          <h3 className="text-xl font-semibold text-foreground" data-testid={`text-category-title-${category}`}>
+            {info.label}
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            {endpoints.length} endpoint{endpoints.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <AnimatePresence mode="popLayout">
+          {endpoints.map((endpoint, index) => (
+            <EndpointCard key={endpoint.id} endpoint={endpoint} index={startIndex + index} />
+          ))}
+        </AnimatePresence>
+      </div>
+    </section>
+  );
+}
 
 export default function Dashboard() {
   const [search, setSearch] = useState("");
@@ -50,6 +98,27 @@ export default function Dashboard() {
       return matchesSearch && matchesCategory;
     });
   }, [endpoints, search, selectedCategory]);
+
+  const groupedEndpoints = useMemo(() => {
+    const groups: Record<string, Endpoint[]> = {};
+    const order = ["ai", "download", "search", "islam", "stalk", "details", "tools", "converter", "arab", "shortner"];
+    
+    filteredEndpoints.forEach((ep) => {
+      if (!groups[ep.category]) groups[ep.category] = [];
+      groups[ep.category].push(ep);
+    });
+
+    return order
+      .filter((cat) => groups[cat])
+      .map((cat) => ({ category: cat, endpoints: groups[cat] }))
+      .concat(
+        Object.keys(groups)
+          .filter((cat) => !order.includes(cat))
+          .map((cat) => ({ category: cat, endpoints: groups[cat] }))
+      );
+  }, [filteredEndpoints]);
+
+  let runningIndex = 0;
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] dark:bg-background pb-24 selection:bg-primary selection:text-primary-foreground">
@@ -124,20 +193,23 @@ export default function Dashboard() {
           </div>
 
           <div className="flex flex-wrap gap-2" data-testid="filter-categories">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                data-testid={`button-category-${category}`}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 ease-out minimal-focus ${
-                  selectedCategory === category
-                    ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm"
-                    : "bg-card border border-border/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                {category}
-              </button>
-            ))}
+            {categories.map((category) => {
+              const info = getCategoryInfo(category);
+              return (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  data-testid={`button-category-${category}`}
+                  className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 ease-out minimal-focus ${
+                    selectedCategory === category
+                      ? `bg-gradient-to-r ${category === "All" ? "from-violet-600 to-indigo-600" : info.color} text-white shadow-sm`
+                      : "bg-card border border-border/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  {category === "All" ? "All" : info.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -157,19 +229,28 @@ export default function Dashboard() {
             </button>
           </div>
         ) : isLoading ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <div key={i} className="flex h-[280px] flex-col rounded-2xl border border-border/40 bg-card p-6 shadow-sm">
-                <div className="mb-4 flex items-center justify-between">
-                  <div className="space-y-3 w-full">
-                    <Skeleton className="h-5 w-16 rounded-full" />
-                    <Skeleton className="h-6 w-3/4" />
+          <div className="space-y-12">
+            {Array.from({ length: 3 }).map((_, gi) => (
+              <div key={gi}>
+                <div className="flex items-center gap-3 mb-6">
+                  <Skeleton className="h-10 w-10 rounded-xl" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-3 w-16" />
                   </div>
                 </div>
-                <Skeleton className="mb-2 h-4 w-full" />
-                <Skeleton className="mb-6 h-4 w-5/6" />
-                <div className="mt-auto pt-4 border-t border-border/20">
-                  <Skeleton className="h-10 w-full rounded-xl" />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex h-[280px] flex-col rounded-2xl border border-border/40 bg-card p-6 shadow-sm">
+                      <Skeleton className="h-5 w-16 rounded-full mb-3" />
+                      <Skeleton className="h-6 w-3/4 mb-4" />
+                      <Skeleton className="h-4 w-full mb-2" />
+                      <Skeleton className="h-4 w-5/6 mb-6" />
+                      <div className="mt-auto pt-4 border-t border-border/20">
+                        <Skeleton className="h-10 w-full rounded-xl" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
@@ -199,12 +280,19 @@ export default function Dashboard() {
             )}
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <AnimatePresence mode="popLayout">
-              {filteredEndpoints.map((endpoint, index) => (
-                <EndpointCard key={endpoint.id} endpoint={endpoint} index={index} />
-              ))}
-            </AnimatePresence>
+          <div>
+            {groupedEndpoints.map((group) => {
+              const si = runningIndex;
+              runningIndex += group.endpoints.length;
+              return (
+                <CategoryGroup
+                  key={group.category}
+                  category={group.category}
+                  endpoints={group.endpoints}
+                  startIndex={si}
+                />
+              );
+            })}
           </div>
         )}
       </main>

@@ -30,9 +30,6 @@ export function EndpointCard({ endpoint, index }: EndpointCardProps) {
       <div>
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
-            <span className="mb-2 inline-flex items-center rounded-full bg-gradient-to-r from-violet-100 to-indigo-100 dark:from-violet-900/30 dark:to-indigo-900/30 px-2.5 py-0.5 text-xs font-medium tracking-wide text-violet-700 dark:text-violet-300">
-              {endpoint.category}
-            </span>
             <h3 className="text-lg font-semibold leading-tight text-foreground line-clamp-1" title={endpoint.name}>
               {endpoint.name}
             </h3>
